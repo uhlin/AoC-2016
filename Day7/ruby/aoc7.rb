@@ -14,14 +14,19 @@ def run(file)
   raise OptionParser::MissingArgument.new("Required argument -f") if file.nil? || file.empty?
   input = IO.readlines(file)
 
-  num = 0
+  tls = 0
+  ssl = 0
 
   input.each do |ip|
     parts = split_ip_parts(ip)
     abbas = extract_abbas(parts)
-    num += 1 if supports_tls?(abbas)
+    abas = extract_abas(parts)
+    tls += 1 if supports_tls?(abbas)
+    ssl += 1 if supports_ssl?(abas)
   end
-  puts num
+  puts "IP:s that support TLS: #{tls}"
+  puts "IP:s that support SSL: #{ssl}"
+
 end
 
 def split_ip_parts(ip)
@@ -33,15 +38,16 @@ def split_ip_parts(ip)
 end
 
 def extract_abbas(parts)
-  parts[:parts].map! do |part|
+  result = {}
+  result[:parts] = parts[:parts].map do |part|
     extract_abba(part)
   end
-  parts[:parts].flatten!
-  parts[:seqs].map! do |seq|
+  result[:parts].flatten!
+  result[:seqs] = parts[:seqs].map do |seq|
     extract_abba(seq)
   end
-  parts[:seqs].flatten!
-  parts
+  result[:seqs].flatten!
+  result
 end
 
 def extract_abba(part)
@@ -59,10 +65,52 @@ def extract_abba(part)
   found
 end
 
+def extract_abas(parts)
+  result = {}
+  result[:parts] = parts[:parts].map do |part|
+    extract_aba(part)
+  end
+  result[:parts].flatten!
+  result[:seqs] = parts[:seqs].map do |seq|
+    extract_aba(seq)
+  end
+  result[:seqs].flatten!
+  result
+end
+
+def extract_aba(part)
+  found = []
+  part.chars.each_with_index do |val, index|
+    a = val
+    b = part[index + 1]
+    c = part[index + 2]
+    next unless a == c
+    next unless a != b
+    found.push "#{a}#{b}#{c}"
+  end
+  found
+end
+
 def supports_tls?(abbas)
   p = abbas[:parts].size > 0
   s = abbas[:seqs].size == 0
   p && s
+end
+
+def supports_ssl?(abas)
+  abas[:parts].each do |part|
+    abas[:seqs].each do |seq|
+      return true if inverse? part, seq
+    end
+  end
+  false
+end
+
+def inverse?(one, two)
+  return false unless one[0] == two[1]
+  return false unless one[1] == two[0]
+  return false unless one[1] == two[2]
+  true
 end
 
 run(options[:file])
