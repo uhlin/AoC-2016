@@ -121,7 +121,7 @@ public class Solution1 {
 	    System.out.println("---------- " + "disc: " + element.discNum +
 			       " ----------");
 	    System.out.printf("pos:\t%d(%d)\ntime:\t%d\n",
-		element.numPos, element.atPosition, element.atTime);
+		element.atPosition, element.numPos, element.atTime);
 	}
     }
 }
