@@ -81,36 +81,31 @@ ranges_init(size_t *ar_memb)
     free(line);
 }
 
-static inline bool
-is_blacklisted(uint32_t ip, size_t ar_memb)
+static int
+cmp(const void *a, const void *b)
 {
-    PRANGE element = NULL;
+    const PRANGE range1 = (const PRANGE) a;
+    const PRANGE range2 = (const PRANGE) b;
 
-    for (element = &ranges[0]; element < &ranges[ar_memb]; element++) {
-	if (ip >= element->start && ip <= element->end)
-	    return (true);
-    }
-
-    return (false);
+    return (range1->start - range2->start);
 }
 
 int
 main()
 {
     size_t ar_memb = 0;
+    PRANGE element = NULL;
     uint32_t ip = 0;
 
     ranges_init(&ar_memb);
-    puts("please stand by. processing...");
+    qsort(&ranges[0], ar_memb, sizeof (PRANGE), cmp);
 
-    while (ip < UPPER_BOUND) {
-	if (!is_blacklisted(ip, ar_memb)) {
-	    printf("answer: " "%" PRIu32 "\n", ip);
-	    break;
-	}
-
-	ip++;
+    for (element = &ranges[0]; element < &ranges[ar_memb]; element++) {
+	if (ip < element->start)
+	    continue;
+	ip = element->end + 1;
     }
 
+    printf("%" PRIu32 "\n", ip);
     return (0);
 }
