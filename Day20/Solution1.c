@@ -84,10 +84,40 @@ ranges_init(size_t *ar_memb)
 static int
 cmp(const void *a, const void *b)
 {
+    char val1[64] = "";
+    char val2[64] = "";
     const PRANGE range1 = (const PRANGE) a;
     const PRANGE range2 = (const PRANGE) b;
+    int ret = -1;
 
-    return (range1->start - range2->start);
+    ret = snprintf(val1, sizeof val1, "%" PRIu32 "\n", range1->start);
+    if (ret == -1 || ret >= sizeof val1)
+	fatal();
+
+    ret = snprintf(val2, sizeof val2, "%" PRIu32 "\n", range2->start);
+    if (ret == -1 || ret >= sizeof val2)
+	fatal();
+
+    if (strlen(val1) > strlen(val2))
+	ret = 1;
+    else if (strlen(val1) < strlen(val2))
+	ret = -1;
+    else
+	ret = strcmp(val1, val2);
+
+    return ret;
+}
+
+static void
+output_ranges(const size_t max_ips, const size_t ar_memb)
+{
+    PRANGE element = NULL;
+
+    if (max_ips > ar_memb)
+	fatal();
+
+    for (element = &ranges[0]; element < &ranges[max_ips]; element++)
+	printf("%" PRIu32 "-" "%" PRIu32 "\n", element->start, element->end);
 }
 
 int
@@ -99,6 +129,11 @@ main()
 
     ranges_init(&ar_memb);
     qsort(&ranges[0], ar_memb, sizeof (PRANGE), cmp);
+
+    if (false) {
+	output_ranges(ar_memb, ar_memb);
+	exit(1);
+    }
 
     for (element = &ranges[0]; element < &ranges[ar_memb]; element++) {
 	if (ip < element->start)
